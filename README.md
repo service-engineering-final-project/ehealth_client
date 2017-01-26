@@ -1,12 +1,20 @@
-# Health Internal Service (SOAP)
+# HealthyMe
 
-The **health internal service** is the service that interacts with the internal database providing data to the **storage data service** through a SOAP interface. Indeed, it handles all the persistence tasks.
+## Service design and engineering final project (Alan Ramponi, 179850)
+
+### Introduction
+
+abc
 
 | resource | link |
 |----------|------|
 | API documentation | http://example.com |
 | Heroku base URL | http://example.com |
 | WSDL file | http://example.com |
+
+### Service architecture
+
+![alt tag](img/service_architecture.png)
 
 ### How to run it
 Since the server is already deployed on Heroku, it is only needed to go to the Heroku base URL (http://example.com). However, you can also deploy again the server on Heroku via git.
