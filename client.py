@@ -24,10 +24,28 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 # Global variables used for transition states
-ADD_PERSON, CHECK_PERSON, MODIFY_PERSON, UPDATE_PERSON, DELETE_PERSON, CHOOSE_GOAL, ADD_GOAL, CHECK_GOAL, MODIFY_GOAL, SUCC_GOAL, GENDER, PHOTO, LOCATION, BIO = range(14)
+STATE1, STATE2, STATE3, STATE4, STATE5, STATE6, STATE7, STATE8, STATE9, STATE10, STATE11, STATE12, STATE13 = range(13)
 
-# Useful global variables to keep track of the user
-PATIENT_NAME = "no_name_yet"
+
+class Patient:
+    'Common base class for all employees'
+    empCount = 0
+    id = 0
+
+    def __init__(self, id, name):
+        self.id = id
+        self.name = name
+        Patient.empCount += 1
+        Patient.id = id
+
+    def displayCount(self):
+        print "Total Employee %d" % Employee.empCount
+
+    def displayEmployee(self):
+        print "Name : ", self.name,  ", Salary: ", self.salary
+
+    def getId(self):
+        return self.id
 
 
 def start(bot, update):
@@ -39,7 +57,7 @@ def start(bot, update):
         "Note: <i>birthdate must be in the format MM-DD-YYYY</i>.", 
         parse_mode="HTML")
 
-    return ADD_PERSON
+    return STATE1
 
 
 def add_person(bot, update):
@@ -49,22 +67,23 @@ def add_person(bot, update):
     firstname, lastname, birthdate = str(update.message.text).split(" ", 2)
 
     # Call the service to add the person to the database and get the response
-    #response = calls.post_person(firstname, lastname, birthdate)
-    #json_response = json.loads(response)
-    #logger.info("\nadd_person() response:\n%s\n" % (str(response)))
+    response = rest_requests.post_person(firstname, lastname, birthdate)
+    json_response = json.loads(response)
+    logger.info("\nadd_person() response:\n%s\n" % (str(response)))
 
-    # Store the person's name
-    #PATIENT_NAME = json_response["firstname"]
-    PATIENT_NAME = firstname
+    # Store the person's data
+    patient_id = json_response["id"]
+    patient_name = json_response["firstname"]
+
+    p = Patient(json_response["id"], json_response["firstname"])
 
     update.message.reply_text("The person was successfully inserted into the database:\n\n"
         "Firstname: <b>%s</b>\nLastname: <b>%s</b>\nBirthdate: <b>%s</b>\n\n"
-        #% (json_response["firstname"], json_response["lastname"], json_response["birthdate"]), 
-        % (firstname, lastname, birthdate), 
+        % (json_response["firstname"], json_response["lastname"], json_response["birthdate"]), 
         parse_mode="HTML")
     update.message.reply_text("It is correct?", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-    return CHECK_PERSON
+    return STATE2
 
 
 def manage_person(bot, update):
@@ -73,7 +92,7 @@ def manage_person(bot, update):
     update.message.reply_text("Don't worry. Which action do you want to perform?",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-    return MODIFY_PERSON
+    return STATE3
 
 
 def modify_person(bot, update):
@@ -81,7 +100,7 @@ def modify_person(bot, update):
         "[<b>firstname lastname birthdate</b>]\n"
         "Note: <i>birthdate must be in the format MM-DD-YYYY</i>.")
     
-    return UPDATE_PERSON
+    return STATE4
 
 
 def modify_person_2(bot, update):
@@ -90,42 +109,75 @@ def modify_person_2(bot, update):
     update.message.reply_text("Are you sure you want to delete the patient from the database?",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-    return DELETE_PERSON
+    return STATE5
 
 
 def update_person(bot, update):
     update.message.reply_text("The person was successfully updated!")
 
-    return CHOOSE_GOAL
+    return STATE6
 
 
 def delete_person(bot, update):
     update.message.reply_text("The person was successfully deleted!\n\nType /start to add a new person :-)")
 
-    return ConversationHandler.END
+    return STATE1
 
 
 def choose_goal(bot, update):
-    reply_keyboard = [['Weight', 'Steps', 'Bloodpressure'], ['Sleep hours', 'Calories', 'Sodium']]
+    reply_keyboard = [['weight', 'steps', 'sleep_hours'], ['proteins', 'carbohydrates', 'lipids'], ['calories', 'sodium']]
 
     update.message.reply_text("Which goal do you want to add for him?",
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
-    return ADD_GOAL
+    return STATE6
 
 
 def add_goal(bot, update):
-    reply_keyboard = [["Yes", "No"]]
+    #reply_keyboard = [["Yes", "No"]]
 
-    print update.message.text
+    # Store the patient's goal
+    global PATIENT_GOAL 
+    PATIENT_GOAL = update.message.text
 
-    update.message.reply_text("Please, insert the patient's goal.\n\n"
+    update.message.reply_text("Please, insert the following data for the patient's goal.\n\n"
         "[<b>init_value final_value deadline</b>]\n"
-        "Note: <i>deadline must be in the format MM-DD-YYYY</i>.",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True), 
+        "Note: <i>deadline must be in a format e.g., Wed Feb 15 10:00:00 CET 2017</i>.",
+        #reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True), 
         parse_mode="HTML")
 
-    return CHECK_GOAL
+    #update.message.reply_text("It is correct?", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    return STATE7
+
+
+def check_goal(bot, update):
+    reply_keyboard = [["Yes", "No"]]
+
+    # Store the input data into some variables
+    init_value, final_value, deadline = str(update.message.text).split(" ", 2)
+
+    # Call the service to add the person to the database and get the response
+    response = rest_requests.post_goal(Patient.id, "prova", init_value, final_value, deadline)
+    json_response = json.loads(response)
+    logger.info("\nadd_goal() response:\n%s\n" % (str(response)))
+
+    update.message.reply_text("The goal was successfully inserted into the database:\n\n"
+        "Init value: <b>%s</b>\nFinal value: <b>%s</b>\nDeadline: <b>%s</b>\n\n"
+        % (json_response["init_value"], json_response["final_value"], json_response["deadline"]), 
+        parse_mode="HTML")
+    update.message.reply_text("It is correct?", reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    return STATE8
+
+
+def another_goal(bot, update):
+    reply_keyboard = [["Yes", "No"]]
+
+    update.message.reply_text("Do you want to add another goal?",
+        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+
+    return STATE
 
 
 def manage_goal(bot, update):
@@ -152,15 +204,6 @@ def modify_goal_2(bot, update):
         reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
 
     return ConversationHandler.END
-
-
-def another_goal(bot, update):
-    reply_keyboard = [["Yes", "No"]]
-
-    update.message.reply_text("Do you want to add another goal?",
-        reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-
-    return SUCC_GOAL
 
 
 def add_measurement(bot, update):
@@ -214,65 +257,6 @@ def sendImageFromUrl(url):
     ])
 
 
-
-def gender(bot, update):
-    user = update.message.from_user
-    logger.info("Gender of %s: %s" % (user.first_name, update.message.text))
-    update.message.reply_text('I see! Please send me a photo of yourself, '
-                              'so I know what you look like, or send /skip if you don\'t want to.',
-                              reply_markup=ReplyKeyboardRemove())
-
-    return PHOTO
-
-
-def photo(bot, update):
-    user = update.message.from_user
-    photo_file = bot.getFile(update.message.photo[-1].file_id)
-    photo_file.download('user_photo.jpg')
-    logger.info("Photo of %s: %s" % (user.first_name, 'user_photo.jpg'))
-    update.message.reply_text('Gorgeous! Now, send me your location please, '
-                              'or send /skip if you don\'t want to.')
-
-    return LOCATION
-
-
-def skip_photo(bot, update):
-    user = update.message.from_user
-    logger.info("User %s did not send a photo." % user.first_name)
-    update.message.reply_text('I bet you look great! Now, send me your location please, '
-                              'or send /skip.')
-
-    return LOCATION
-
-
-def location(bot, update):
-    user = update.message.from_user
-    user_location = update.message.location
-    logger.info("Location of %s: %f / %f"
-                % (user.first_name, user_location.latitude, user_location.longitude))
-    update.message.reply_text('Maybe I can visit you sometime! '
-                              'At last, tell me something about yourself.')
-
-    return BIO
-
-
-def skip_location(bot, update):
-    user = update.message.from_user
-    logger.info("User %s did not send a location." % user.first_name)
-    update.message.reply_text('You seem a bit paranoid! '
-                              'At last, tell me something about yourself.')
-
-    return BIO
-
-
-def bio(bot, update):
-    user = update.message.from_user
-    logger.info("Bio of %s: %s" % (user.first_name, update.message.text))
-    update.message.reply_text('Thank you! I hope we can talk again some day.')
-
-    return ConversationHandler.END
-
-
 def cancel(bot, update):
     user = update.message.from_user
     logger.info("User %s canceled the conversation." % user.first_name)
@@ -288,7 +272,7 @@ def error(bot, update, error):
 
 def main():
     # Create the EventHandler and pass it your bot's token.
-    updater = Updater("325642990:AAG7XiAvigXnWFmbKXNoylmdNB82taRwN6k")
+    updater = Updater("")
 
     # Get the dispatcher to register handlers
     dp = updater.dispatcher
@@ -298,31 +282,16 @@ def main():
         entry_points=[CommandHandler('start', start)],
 
         states={
-            ADD_PERSON: [MessageHandler(Filters.text, get_recipe)],
-            #ADD_PERSON: [MessageHandler(Filters.text, add_person)],
-            CHECK_PERSON: [RegexHandler('^(Yes)$', choose_goal), RegexHandler('(No)$', manage_person)],
-            MODIFY_PERSON: [RegexHandler('^(Update)$', modify_person), RegexHandler('(Delete)$', modify_person_2)],
-            UPDATE_PERSON: [MessageHandler(Filters.text, update_person)],
-            DELETE_PERSON: [MessageHandler(Filters.text, delete_person)],
-            CHOOSE_GOAL: [MessageHandler(Filters.text, choose_goal)],
-            ADD_GOAL: [MessageHandler(Filters.text, add_goal)],
-            CHECK_GOAL: [RegexHandler('^(Yes)$', another_goal), RegexHandler('(No)$', manage_goal)],
-            MODIFY_GOAL: [RegexHandler('^(Update)$', modify_goal), RegexHandler('(Delete)$', modify_goal_2)],
-            SUCC_GOAL: [MessageHandler('^(Yes)$', choose_goal), RegexHandler('(No)$', get_recipe)],
-            GENDER: [RegexHandler('^(Doctor)$',
-                                    add_goal),
-                       RegexHandler('(Patient)$',
-                                    add_measurement),
-                       ],
-            #GENDER: [RegexHandler('^(Doctor|Patient)$', gender)],
-
-            PHOTO: [MessageHandler(Filters.photo, photo),
-                    CommandHandler('skip', skip_photo)],
-
-            LOCATION: [MessageHandler(Filters.location, location),
-                       CommandHandler('skip', skip_location)],
-
-            BIO: [MessageHandler(Filters.text, bio)]
+            STATE1: [MessageHandler(Filters.text, add_person)],
+            STATE2: [RegexHandler('^(Yes)$', choose_goal), RegexHandler('(No)$', manage_person)],
+            STATE3: [RegexHandler('^(Update)$', modify_person), RegexHandler('(Delete)$', modify_person_2)],
+            STATE4: [MessageHandler(Filters.text, update_person)],
+            STATE5: [MessageHandler(Filters.text, delete_person)],
+            STATE6: [MessageHandler(Filters.text, add_goal)],
+            STATE7: [MessageHandler(Filters.text, check_goal)],
+            STATE8: [RegexHandler('^(Yes)$', another_goal), RegexHandler('(No)$', manage_goal)],
+            STATE9: [RegexHandler('^(Update)$', modify_goal), RegexHandler('(Delete)$', modify_goal_2)],
+            STATE10: [MessageHandler('^(Yes)$', choose_goal), RegexHandler('(No)$', get_recipe)]
         },
 
         fallbacks=[CommandHandler('cancel', cancel)]
