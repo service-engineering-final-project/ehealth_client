@@ -34,16 +34,20 @@ The service architecture is partitioned into three main layers. The lower one de
 
 In particular, the modules are the following:
 * **Health internal service**: a SOAP web service that is responsible for all data-related requests (CRUD operations). It talks directly to the internal database and replies to the storage data service requests;
-* **Recipe adapter service**: a REST web service that provides data to the storage data service through a REST interface. It allows consumers to retrieve recipes and their nutritional facts in a structured, clearer format (both XML and JSON) exploiting the [Yummly APIs](http://www.yummly.com/) (by means of an academic plan); 
+* **Recipe adapter service**: a REST web service that provides data to the storage data service through a REST interface. It allows consumers to retrieve recipes and their nutritional facts in a structured, clearer format (both XML and JSON) exploiting the [Yummly](http://www.yummly.com/) APIs (by means of an academic plan); 
 * **Quote adapter service**: a REST web service that provides data to the storage data service through a REST interface. It allows consumers to retrieve motivational quotes in a structured format (both XML and JSON) crawled from [Quotelicious](http://quotelicious.com/);
 * **Storage data service**: a REST web service that redirects requests from the services above to the right data-related service below. It represents a sort of aggregator that provides a uniform REST interface to the high level services;
 * **Business logic service**: a REST web service that deals with the manipulation of data in order to take decisions. It receives requests from the process centric service, then gets data from the storage data service to compute results to send back to the dispatcher;
 * **Process centric service**: a REST web service that receives requests from the client (user interface) and redirects them to the right module below. It integrates both business logic methods and storage data service methods;
 * [**User interface client**]: a Telegram bot that handles in an automatic fashion the patient actions. It doesn't represent a real intelligence; instead, it can be seen as a state diagram, so it manages user's decisions replying to him after sending requests to the REST process centric service.
 
+Schematically, the service architecture is the following:
+
 ![alt tag](img/service_architecture.png)
 
-Note that service implementations are general and reusable in different scenarios. Indeed, each module interacts with other modules only through web services (except for the local database). In order to have more details, see the resources below:
+Note that service implementations are general and reusable in different scenarios. Indeed, each module interacts with other modules only through web services (except for the local database).
+
+In order to have more details, see the resources below:
 
 | module | technology |repository | API documentation | server base URL |
 |--------|------------|------------|-------------------| -------- |
