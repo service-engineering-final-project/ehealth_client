@@ -15,9 +15,7 @@ import client
 
 
 # Global variables useful for REST requests
-#base_url = "https://storage-data-service-ar.herokuapp.com/rest/"
-base_url = "http://127.0.1.1:5750/rest/"
-base_url_ws = base_url + "ws/"
+base_url = "https://storage-data-service-ar.herokuapp.com/rest/"
 headers = {'Content-type': 'application/json'}
 headers2 = {'Content-type': 'application/xml'}
 
@@ -41,13 +39,14 @@ def post_goal(id, title, init_value, final_value, deadline):
 	return r.text
 
 
+def post_measurement(id, measure, value):
+	time = strftime("%a %b %d %H:%M:%S CET %Y", gmtime())
+	print id, measure, value
+	data = {"value": value}
 
+	r = requests.post(base_url + "person/" + str(id) + "/" + measure, headers=headers, data=json.dumps(data))
 
-
-
-
-
-
+	return r.text
 
 
 def get_recipe():
@@ -55,13 +54,17 @@ def get_recipe():
 
 	return r.text
 
+
 def get_recipe_nutrition_facts(id):
 	r = requests.get(base_url + "recipe/" + id, headers=headers2)
 	
 	return r.text
 
 
+def get_quote():
+	r = requests.get(base_url + "recipe/quote/random", headers=headers2)
 
+	return r.text
 
 
 def get_person(id):
